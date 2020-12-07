@@ -1,6 +1,9 @@
 package jp.ac.o_hara.site;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -13,13 +16,26 @@ public class SimpleDAO {
 	//データベ－スへの接続を行う
 	protected final Connection createConnection() {
 		Connection db = null;
-    	try {
-			Context con = new InitialContext();
-			DataSource ds = (DataSource)con.lookup("java:comp/env/jdbc/samplesite");
-			db = ds.getConnection();
-    	} catch (SQLException | NamingException e) {
-			e.printStackTrace();
-    	}
+		if (System.getenv("DATABASE_URL") != null) {
+			try {
+				URI dbUri = new URI(System.getenv("DATABASE_URL"));
+				String username = dbUri.getUserInfo().split(":")[0];
+				String password = dbUri.getUserInfo().split(":")[1];
+				String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + dbUri.getPath();
+
+				db = DriverManager.getConnection(dbUrl, username, password);
+			} catch (URISyntaxException | SQLException e) {
+				e.printStackTrace();
+			}
+		} else {
+	    	try {
+				Context con = new InitialContext();
+				DataSource ds = (DataSource)con.lookup("java:comp/env/jdbc/samplesite");
+				db = ds.getConnection();
+	    	} catch (SQLException | NamingException e) {
+				e.printStackTrace();
+	    	}
+		}
 		return db;
 	}
 	
@@ -36,19 +52,16 @@ public class SimpleDAO {
 	//特定のSQLを実行する
 	public final boolean execSQL( String sql ) {
 		Connection db = this.createConnection();
-    	PreparedStatement ps = null;
+    	//PreparedStatement ps = null;
     	boolean result = false;
     	if( !sql.startsWith("CREATE") && !sql.startsWith("DROP") && !sql.startsWith("INSERT") && !sql.startsWith("UPDATE")) { return result; }
-    	try {
-			ps = db.prepareStatement(sql);
+    	try (PreparedStatement ps = db.prepareStatement(sql)) {
+			//ps = db.prepareStatement(sql);
 			ps.executeUpdate();
 			result = true;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				if ( ps != null ) { ps.close(); }
-			} catch (SQLException e) {}
 			this.closeConnection(db);
 		}
     	return result;
