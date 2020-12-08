@@ -45,6 +45,9 @@ public class CalendarEntryTestListener implements ServletContextListener {
 		dao.create(new CalendarBean(Date.valueOf("2020-12-23"), "all", "Dummy"));
 		dao.create(new CalendarBean(Date.valueOf("2020-12-24"), "all", "Dummy"));
 		dao.create(new CalendarBean(Date.valueOf("2020-12-31"), "hoge", "Dummy"));
+		dao.create(new CalendarBean(Date.valueOf("2020-12-08"), "all", "Blog"));
+		dao.create(new CalendarBean(Date.valueOf("2020-12-07"), "all", "Blog"));
+		
 	}
 
 	/**
